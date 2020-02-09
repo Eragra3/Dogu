@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Dogu\Dogu.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Colorful.Console" Version="1.2.10" />
+    </ItemGroup>
+
+</Project>
