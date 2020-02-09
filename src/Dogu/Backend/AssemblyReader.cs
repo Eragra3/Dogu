@@ -1,31 +1,34 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Dogu.Assembly
+namespace Dogu.Backend
 {
-    public class AssemblyReader : IDisposable
+    public class AssemblyReader : IAssemblyReader, IDisposable
     {
         private readonly MetadataLoadContext _metadataLoadContext;
-        private readonly System.Reflection.Assembly _assembly;
+        private readonly Assembly _assembly;
+
+        private readonly string[] _coreAssemblies = new[] {"System.Runtime", "System.Private.CoreLib"};
 
         public AssemblyReader(string assemblyPath)
         {
             string assemblyName = Path.GetFileNameWithoutExtension(assemblyPath);
-            string coreLibPath = AppDomain.CurrentDomain
+            string[] coreLibPaths = AppDomain.CurrentDomain
                 .GetAssemblies()
-                .First(x => x.GetName().Name == "System.Private.CoreLib")
-                .Location;
+                .Where(x => _coreAssemblies.Contains(x.GetName().Name))
+                .Select(x => x.Location)
+                .ToArray();
 
-
-            var resolver = new PathAssemblyResolver(new[] {assemblyPath, coreLibPath});
-            _metadataLoadContext = new MetadataLoadContext(resolver, "System.Private.CoreLib");
+            var resolver = new PathAssemblyResolver(new[] {assemblyPath}.Concat(coreLibPaths));
+            _metadataLoadContext = new MetadataLoadContext(resolver);
             _assembly = _metadataLoadContext.LoadFromAssemblyName(assemblyName);
         }
 
-        public IEnumerable<TypeInfo> DefinedTypes => _assembly.DefinedTypes;
+        public IEnumerable<Type> ExportedTypes => _assembly.ExportedTypes;
 
         /// <inheritdoc cref="System.IDisposable.Dispose"/>
         protected virtual void Dispose(bool disposing)
