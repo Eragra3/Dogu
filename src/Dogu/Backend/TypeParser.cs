@@ -24,18 +24,18 @@ namespace Dogu.Backend
             var codeMembers = types
                 .Select(type =>
                 {
-                    TopLevelTypeEnum elementTypeEnum = MapTypeToCodeElement(type);
+                    TopLevelTypeEnum elementTypeEnum = MapTypeToTopLevelType(type);
 
                     TopLevelType element = elementTypeEnum switch
                     {
                         TopLevelTypeEnum.Class => ParseClass(type),
                         TopLevelTypeEnum.Interface => ParseInterface(type),
                         TopLevelTypeEnum.Enum => ParseEnum(type),
-                        TopLevelTypeEnum.Structure => throw new NotImplementedException(),
+                        TopLevelTypeEnum.Structure => ParseStructure(type),
                         TopLevelTypeEnum.Event => throw new NotImplementedException(),
                         TopLevelTypeEnum.Delegate => throw new NotImplementedException(),
-                        _ => throw new ArgumentOutOfRangeException(
-                            $"Got code type element that cannot be exported on assembly level, '{elementTypeEnum}'")
+                        // _ => throw new ArgumentOutOfRangeException(
+                        //     $"Got code type element that cannot be exported on assembly level, '{elementTypeEnum}'")
                     };
 
                     return element;
@@ -45,7 +45,7 @@ namespace Dogu.Backend
             return codeMembers;
         }
 
-        protected Interface ParseInterface(Type type)
+        protected virtual Structure ParseStructure(Type type)
         {
             Method[] methods = type
                 .GetMethods(BindingFlags.Instance
@@ -56,12 +56,32 @@ namespace Dogu.Backend
 
             AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
 
-            var @interface = new Interface(type.FullName, type.Name, accessModifier, methods);
+            string name = ReflectionUtility.GeneratedTypeToCodeMarkup(type);
+
+            var structure = new Structure(type, type.FullName, name, accessModifier, methods);
+
+            return structure;
+        }
+
+        protected virtual Interface ParseInterface(Type type)
+        {
+            Method[] methods = type
+                .GetMethods(BindingFlags.Instance
+                            | BindingFlags.Public
+                            | BindingFlags.DeclaredOnly)
+                .Select(ParseMethod)
+                .ToArray();
+
+            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
+
+            string name = ReflectionUtility.GeneratedTypeToCodeMarkup(type);
+
+            var @interface = new Interface(type, type.FullName, name, accessModifier, methods);
 
             return @interface;
         }
 
-        protected Enum ParseEnum(Type type)
+        protected virtual Enum ParseEnum(Type type)
         {
             var enumNames = type.GetEnumNames();
             //TODO: support for enums other than int
@@ -74,12 +94,12 @@ namespace Dogu.Backend
 
             AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
 
-            var @enum = new Enum(type.FullName, type.Name, accessModifier, values);
+            var @enum = new Enum(type, type.FullName, type.Name, accessModifier, values);
 
             return @enum;
         }
 
-        protected Class ParseClass(Type type)
+        protected virtual Class ParseClass(Type type)
         {
             Method[] methods = type
                 .GetMethods(BindingFlags.Instance
@@ -93,25 +113,32 @@ namespace Dogu.Backend
 
             AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
 
-            var @class = new Class(type.FullName, type.Name, accessModifier, methods);
+            string name = ReflectionUtility.GeneratedTypeToCodeMarkup(type);
+
+            var @class = new Class(type, type.FullName, name, accessModifier, methods);
 
             return @class;
         }
 
-        protected Method ParseMethod(MethodInfo x)
+        protected virtual Method ParseMethod(MethodInfo x)
         {
+            if (x.Name == "BindToName")
+            {
+                Console.Write("");
+            }
             Parameter[] parameters = x
                 .GetParameters()
-                .Select(y => new Parameter(y.Name, y.ParameterType))
+                .Select(y => new Parameter(y.Name, y.ParameterType, y))
                 .ToArray();
 
             AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(x);
 
-            var method = new Method(x.Name, x.ReturnType, accessModifier, parameters);
+            var method = new Method(x.Name, x.ReturnType, ReflectionUtility.GeneratedTypeToCodeMarkup(x.ReturnType),
+                accessModifier, parameters);
             return method;
         }
 
-        protected TopLevelTypeEnum MapTypeToCodeElement(Type type)
+        protected TopLevelTypeEnum MapTypeToTopLevelType(Type type)
         {
             return type switch
             {

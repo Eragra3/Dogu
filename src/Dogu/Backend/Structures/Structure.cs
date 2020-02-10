@@ -4,11 +4,11 @@ using System.Text;
 
 namespace Dogu.Backend.Structures
 {
-    public class Interface : TopLevelType
+    public class Structure : TopLevelType
     {
         public readonly Method[] Methods;
 
-        public Interface(Type rawType, string fullName, string name, AccessModifier accessModifier, Method[] methods) :
+        public Structure(Type rawType, string fullName, string name, AccessModifier accessModifier, Method[] methods) :
             base(rawType, fullName, name, accessModifier)
         {
             Methods = methods;

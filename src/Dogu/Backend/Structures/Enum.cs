@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Dogu.Backend.Structures
 {
@@ -7,7 +8,8 @@ namespace Dogu.Backend.Structures
         //TODO: add type
         public readonly IDictionary<string, string> Values;
 
-        public Enum(string fullName, string name, AccessModifier accessModifier, IDictionary<string, string> values) : base(fullName, name, accessModifier)
+        public Enum(Type rawType, string fullName, string name, AccessModifier accessModifier,
+            IDictionary<string, string> values) : base(rawType, fullName, name, accessModifier)
         {
             Values = values;
         }

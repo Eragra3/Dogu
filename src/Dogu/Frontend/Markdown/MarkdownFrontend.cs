@@ -28,11 +28,41 @@ namespace Dogu.Frontend.Markdown
                     Class @class => DocumentClass(@class),
                     Enum @enum => DocumentEnum(@enum),
                     Interface @interface => DocumentInterface(@interface),
-                    _ => throw new ArgumentOutOfRangeException(nameof(type))
+                    Structure structure => DocumentStructure(structure)
+                    // _ => throw new ArgumentOutOfRangeException(nameof(type))
                 };
 
                 File.AppendAllText(filePath, section + Environment.NewLine);
             }
+        }
+
+        private string DocumentStructure(Structure structure)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"## {structure.Name}");
+
+            // Summary
+            sb.AppendLine("Overview");
+            sb.AppendLine("```csharp");
+            sb.AppendLine($"{structure.AccessModifier.ToString().ToLower()} struct {structure.Name}");
+            sb.AppendLine("{");
+
+            foreach (Method method in structure.Methods)
+            {
+                sb.AppendLine($"    {GetMethodSignature(method)};");
+            }
+
+            sb.AppendLine("}");
+            sb.AppendLine("```");
+            sb.AppendLine();
+
+            foreach (Method method in structure.Methods)
+            {
+                sb.AppendLine(DocumentMethod(method));
+            }
+
+            return sb.ToString();
         }
 
         private string DocumentEnum(Enum @enum)
@@ -131,9 +161,38 @@ namespace Dogu.Frontend.Markdown
 
         private static string GetMethodSignature(Method method)
         {
-            string parameters = $"({string.Join(", ", method.Parameters.Select(x => x.ToString()))})";
+            string parameters = $"({string.Join(", ", method.Parameters.Select(x => GetParameterSignature(x)))})";
 
             return $"{method.AccessModifier.ToString().ToLower()} {method.ReturnType} {method.Name}{parameters}";
+        }
+
+        private static string GetParameterSignature(Parameter x)
+        {
+            string modifiers = "";
+            if (x.IsIn)
+            {
+                modifiers += "in ";
+            }
+
+            if (x.IsOut)
+            {
+                modifiers += "out ";
+            }
+
+            if (x.IsRef)
+            {
+                modifiers += "ref ";
+            }
+
+            string defaultValue = "";
+            if (x.IsOptional)
+            {
+                defaultValue = $" = {x.DefaultValue}";
+            }
+
+            string signature = $"{modifiers}{x.Type} {x.Name}{defaultValue}";
+
+            return signature;
         }
     }
 }

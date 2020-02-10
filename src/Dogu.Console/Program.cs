@@ -12,7 +12,10 @@ namespace Dogu.Console
         public static void Main(string[] args)
         {
 #if DEBUG
-            args = new[] {@"Dogu.dll", "dogu.md"};
+            if (args.Length == 0)
+            {
+                args = new[] {@"Dogu.dll", "dogu.md"};
+            }
 #endif
             if (args.Length < 1)
             {

@@ -7,13 +7,15 @@ namespace Dogu.Backend.Structures
 {
     public abstract class TopLevelType
     {
+        public readonly Type RawType;
         public readonly string FullName;
         public readonly string Name;
         public readonly AccessModifier AccessModifier;
 
-        protected TopLevelType(string fullName, string name, AccessModifier accessModifier)
+        protected TopLevelType(Type rawType, string fullName, string name, AccessModifier accessModifier)
         {
-            Name = name;
+            RawType = rawType;
+            Name = ReflectionUtility.GeneratedTypeToCodeMarkup(rawType);
             FullName = fullName;
             AccessModifier = accessModifier;
         }
@@ -23,6 +25,7 @@ namespace Dogu.Backend.Structures
             var sb = new StringBuilder();
 
             sb.AppendLine(GetType().FullName);
+            sb.AppendLine($"  {nameof(RawType)}={RawType}");
             sb.AppendLine($"  {nameof(FullName)}={FullName}");
             sb.AppendLine($"  {nameof(Name)}={Name}");
             sb.Append($"  {nameof(AccessModifier)}={AccessModifier}");
