@@ -25,6 +25,9 @@ namespace Dogu.Backend
                 { IsAssembly: true } => AccessModifier.Internal,
                 { IsFamily: true } => AccessModifier.Protected,
                 { IsPrivate: true } => AccessModifier.Private,
+                { IsFamilyOrAssembly: true } => AccessModifier.ProtectedInternal,
+                _ => throw new InvalidOperationException(
+                    $"Couldn't map type '{type.Name}' to any value of {nameof(AccessModifier)} enum")
             };
         }
 

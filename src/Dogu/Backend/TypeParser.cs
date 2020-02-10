@@ -34,8 +34,8 @@ namespace Dogu.Backend
                         TopLevelTypeEnum.Structure => ParseStructure(type),
                         TopLevelTypeEnum.Event => throw new NotImplementedException(),
                         TopLevelTypeEnum.Delegate => throw new NotImplementedException(),
-                        // _ => throw new ArgumentOutOfRangeException(
-                        //     $"Got code type element that cannot be exported on assembly level, '{elementTypeEnum}'")
+                        _ => throw new ArgumentOutOfRangeException(
+                            $"Got code type element that cannot be exported on assembly level, '{elementTypeEnum}'")
                     };
 
                     return element;
@@ -63,6 +63,51 @@ namespace Dogu.Backend
             return structure;
         }
 
+        protected virtual Class ParseClass(Type type)
+        {
+            Method[] methods = type
+                .GetMethods(BindingFlags.Instance
+                            | BindingFlags.Static
+                            | BindingFlags.Public
+                            | BindingFlags.DeclaredOnly
+                            | BindingFlags.NonPublic)
+                // IsSpecialName excludes properties
+                .Where(x => (x.IsPublic || x.IsFamily) && !x.IsSpecialName)
+                .Select(ParseMethod)
+                .ToArray();
+
+            Indexer[] indexers = type
+                .GetProperties(BindingFlags.Instance
+                               | BindingFlags.Static
+                               | BindingFlags.Public
+                               | BindingFlags.DeclaredOnly
+                               | BindingFlags.NonPublic)
+                .Where(x => x.GetIndexParameters().Any() &&
+                            new[] {x.GetMethod, x.SetMethod}.Any(y => y != null && (y.IsPublic || y.IsFamily)))
+                .Select(ParseIndexer)
+                .ToArray();
+
+            Property[] properties = type
+                .GetProperties(BindingFlags.Instance
+                               | BindingFlags.Static
+                               | BindingFlags.Public
+                               | BindingFlags.DeclaredOnly
+                               | BindingFlags.NonPublic)
+                // Exclude indexers by examining `GetIndexParameters`
+                .Where(x => !x.GetIndexParameters().Any() &&
+                            new[] {x.GetMethod, x.SetMethod}.Any(y => y != null && (y.IsPublic || y.IsFamily)))
+                .Select(ParseProperty)
+                .ToArray();
+
+            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
+
+            string name = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(type);
+
+            var @class = new Class(type, type.FullName, name, accessModifier, methods, properties, indexers);
+
+            return @class;
+        }
+
         protected virtual Interface ParseInterface(Type type)
         {
             Method[] methods = type
@@ -74,11 +119,32 @@ namespace Dogu.Backend
                 .Select(ParseMethod)
                 .ToArray();
 
+            Indexer[] indexers = type
+                .GetProperties(BindingFlags.Instance
+                               | BindingFlags.Static
+                               | BindingFlags.Public
+                               | BindingFlags.DeclaredOnly
+                               | BindingFlags.NonPublic)
+                .Where(x => x.GetIndexParameters().Any() &&
+                            new[] {x.GetMethod, x.SetMethod}.Any(y => y != null && (y.IsPublic || y.IsFamily)))
+                .Select(ParseIndexer)
+                .ToArray();
+
+            Property[] properties = type
+                .GetProperties(BindingFlags.Instance
+                               | BindingFlags.Public
+                               | BindingFlags.DeclaredOnly
+                               | BindingFlags.NonPublic)
+                // Exclude indexers
+                .Where(x => !x.GetIndexParameters().Any())
+                .Select(ParseProperty)
+                .ToArray();
+
             AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
 
             string name = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(type);
 
-            var @interface = new Interface(type, type.FullName, name, accessModifier, methods);
+            var @interface = new Interface(type, type.FullName, name, accessModifier, methods, properties, indexers);
 
             return @interface;
         }
@@ -101,38 +167,6 @@ namespace Dogu.Backend
             return @enum;
         }
 
-        protected virtual Class ParseClass(Type type)
-        {
-            Method[] methods = type
-                .GetMethods(BindingFlags.Instance
-                            | BindingFlags.Static
-                            | BindingFlags.Public
-                            | BindingFlags.DeclaredOnly
-                            | BindingFlags.NonPublic)
-                // IsSpecialName excludes properties
-                .Where(x => (x.IsPublic || x.IsFamily) && !x.IsSpecialName)
-                .Select(ParseMethod)
-                .ToArray();
-
-            Property[] properties = type
-                .GetProperties(BindingFlags.Instance
-                               | BindingFlags.Static
-                               | BindingFlags.Public
-                               | BindingFlags.DeclaredOnly
-                               | BindingFlags.NonPublic)
-                .Where(x => new[] {x.GetMethod, x.SetMethod}.Any(x => x.IsPublic || x.IsFamily))
-                .Select(ParseProperty)
-                .ToArray();
-
-            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
-
-            string name = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(type);
-
-            var @class = new Class(type, type.FullName, name, accessModifier, methods, properties);
-
-            return @class;
-        }
-
         protected virtual Property ParseProperty(PropertyInfo propertyInfo)
         {
             var property = new Property(propertyInfo);
@@ -142,17 +176,17 @@ namespace Dogu.Backend
 
         protected virtual Method ParseMethod(MethodInfo methodInfo)
         {
-            Parameter[] parameters = methodInfo
-                .GetParameters()
-                .Select(y => new Parameter(y.ParameterType, y))
-                .ToArray();
+            var method = new Method(methodInfo);
 
-            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(methodInfo);
-
-            var method = new Method(methodInfo.Name, methodInfo.ReturnType,
-                ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(methodInfo.ReturnType),
-                accessModifier, parameters);
             return method;
+        }
+
+
+        protected virtual Indexer ParseIndexer(PropertyInfo propertyInfo)
+        {
+            var indexer = new Indexer(propertyInfo);
+
+            return indexer;
         }
 
         protected TopLevelTypeEnum MapTypeToTopLevelType(Type type)

@@ -101,6 +101,19 @@ namespace Dogu.Frontend.Markdown
             sb.AppendLine($"{@interface.AccessModifier.ToString().ToLower()} interface {@interface.Name}");
             sb.AppendLine("{");
 
+            sb.AppendLine("    // Indexers");
+            foreach (Indexer indexer in @interface.Indexers)
+            {
+                sb.AppendLine($"    {GetIndexerSignature(indexer)};");
+            }
+
+            sb.AppendLine("    // Properties");
+            foreach (Property property in @interface.Properties)
+            {
+                sb.AppendLine($"    {GetPropertySignature(property)};");
+            }
+
+            sb.AppendLine("    // Methods");
             foreach (Method method in @interface.Methods)
             {
                 sb.AppendLine($"    {GetMethodSignature(method)};");
@@ -130,11 +143,19 @@ namespace Dogu.Frontend.Markdown
             sb.AppendLine($"{@class.AccessModifier.ToString().ToLower()} class {@class.Name}");
             sb.AppendLine("{");
 
+            sb.AppendLine("    // Indexers");
+            foreach (Indexer indexer in @class.Indexers)
+            {
+                sb.AppendLine($"    {GetIndexerSignature(indexer)};");
+            }
+
+            sb.AppendLine("    // Properties");
             foreach (Property property in @class.Properties)
             {
                 sb.AppendLine($"    {GetPropertySignature(property)};");
             }
 
+            sb.AppendLine("    // Methods");
             foreach (Method method in @class.Methods)
             {
                 sb.AppendLine($"    {GetMethodSignature(method)};");
@@ -150,6 +171,22 @@ namespace Dogu.Frontend.Markdown
             }
 
             return sb.ToString();
+        }
+
+        private string GetIndexerSignature(Indexer indexer)
+        {
+            // TODO: get proper implementation
+            string propertySignature = GetPropertySignature(indexer);
+
+            string parameters = "";
+            if (indexer.HasSetter)
+            {
+                parameters =
+                    $"({string.Join(", ", indexer.SetMethod.Parameters.Select(GetParameterSignature))})";
+            }
+
+            // Represent indexer like a property, but with it's name replaced with `this` and parameters
+            return propertySignature.Replace($" {indexer.Name}", $" this[{parameters}]");
         }
 
         private string DocumentMethod(Method method)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Dogu.Backend.Structures
@@ -7,19 +8,23 @@ namespace Dogu.Backend.Structures
     public class Method
     {
         public readonly string Name;
-        public readonly Parameter[] Parameters;
         public readonly Type ReturnTypeRaw;
         public readonly string ReturnType;
         public readonly AccessModifier AccessModifier;
+        public readonly Parameter[] Parameters;
 
-        public Method(string name, Type returnTypeRaw, string returnType, AccessModifier accessModifier,
-            Parameter[] parameters)
+        public Method(MethodInfo methodInfo)
         {
-            Name = name;
+            Name = methodInfo.Name;
+            ReturnTypeRaw = methodInfo.ReturnType;
+            ReturnType = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(methodInfo.ReturnType);
+            AccessModifier = ReflectionUtility.GetAccessModifier(methodInfo);
+
+            Parameter[] parameters = methodInfo
+                .GetParameters()
+                .Select(y => new Parameter(y.ParameterType, y))
+                .ToArray();
             Parameters = parameters;
-            AccessModifier = accessModifier;
-            ReturnTypeRaw = returnTypeRaw;
-            ReturnType = returnType;
         }
 
         public override string ToString()

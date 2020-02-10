@@ -7,11 +7,15 @@ namespace Dogu.Backend.Structures
     public class Interface : TopLevelType
     {
         public readonly Method[] Methods;
+        public readonly Property[] Properties;
+        public readonly Indexer[] Indexers;
 
-        public Interface(Type rawType, string fullName, string name, AccessModifier accessModifier, Method[] methods) :
+        public Interface(Type rawType, string fullName, string name, AccessModifier accessModifier, Method[] methods, Property[] properties, Indexer[] indexers) :
             base(rawType, fullName, name, accessModifier)
         {
             Methods = methods;
+            Properties = properties;
+            Indexers = indexers;
         }
 
         public override string ToString()

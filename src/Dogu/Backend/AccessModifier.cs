@@ -8,6 +8,8 @@ namespace Dogu.Backend
         Protected,
         Internal,
         Public,
+        ProtectedInternal,
+        PublicProtected
         // TODO: add combo modifiers
     }
 }

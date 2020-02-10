@@ -8,12 +8,14 @@ namespace Dogu.Backend.Structures
     {
         public readonly Method[] Methods;
         public readonly Property[] Properties;
+        public readonly Indexer[] Indexers;
 
-        public Class(Type rawType, string fullName, string name, AccessModifier accessModifier, Method[] methods, Property[] properties) :
+        public Class(Type rawType, string fullName, string name, AccessModifier accessModifier, Method[] methods, Property[] properties, Indexer[] indexers) :
             base(rawType, fullName, name, accessModifier)
         {
             Methods = methods;
             Properties = properties;
+            Indexers = indexers;
         }
 
         public override string ToString()

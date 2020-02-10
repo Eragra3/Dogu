@@ -13,8 +13,13 @@ namespace Dogu.Backend.Structures
 
         public readonly bool HasSetter;
         public readonly AccessModifier? SetterAccessModifier;
+        public readonly MethodInfo? RawSetMethod;
+        public readonly Method? SetMethod;
+
         public readonly bool HasGetter;
         public readonly AccessModifier? GetterAccessModifier;
+        public readonly MethodInfo? RawGetMethod;
+        public readonly Method? GetMethod;
 
         public Property(PropertyInfo propertyInfo)
         {
@@ -24,19 +29,23 @@ namespace Dogu.Backend.Structures
             Type = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(RawType);
 
             HasSetter = propertyInfo.CanWrite;
+            RawSetMethod = propertyInfo.SetMethod;
             if (HasSetter)
             {
-                SetterAccessModifier = ReflectionUtility.GetAccessModifier(propertyInfo.SetMethod);
+                SetMethod = new Method(RawSetMethod);
+                SetterAccessModifier = ReflectionUtility.GetAccessModifier(RawSetMethod);
             }
 
             HasGetter = propertyInfo.CanRead;
+            RawGetMethod = propertyInfo.GetMethod;
             if (HasGetter)
             {
-                GetterAccessModifier = ReflectionUtility.GetAccessModifier(propertyInfo.GetMethod);
+                GetMethod = new Method(RawGetMethod);
+                GetterAccessModifier = ReflectionUtility.GetAccessModifier(RawGetMethod);
             }
 
             PropertyAccessModifier =
-                GetterAccessModifier > SetterAccessModifier ? GetterAccessModifier : SetterAccessModifier;
+                (GetterAccessModifier ?? 0) > (SetterAccessModifier ?? 0) ? GetterAccessModifier : SetterAccessModifier;
         }
 
         public override string ToString()
