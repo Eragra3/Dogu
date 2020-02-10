@@ -43,7 +43,7 @@ namespace Dogu.Frontend.Markdown
             // Summary
             sb.AppendLine("Overview");
             sb.AppendLine("```csharp");
-            sb.AppendLine($"enum {@enum.Name}");
+            sb.AppendLine($"{@enum.AccessModifier.ToString().ToLower()} enum {@enum.Name}");
             sb.AppendLine("{");
 
             foreach ((string name, string value) in @enum.Values)
@@ -67,7 +67,7 @@ namespace Dogu.Frontend.Markdown
             // Summary
             sb.AppendLine("Overview");
             sb.AppendLine("```csharp");
-            sb.AppendLine($"interface {@interface.Name}");
+            sb.AppendLine($"{@interface.AccessModifier.ToString().ToLower()} interface {@interface.Name}");
             sb.AppendLine("{");
 
             foreach (Method method in @interface.Methods)
@@ -96,7 +96,7 @@ namespace Dogu.Frontend.Markdown
             // Summary
             sb.AppendLine("Overview");
             sb.AppendLine("```csharp");
-            sb.AppendLine($"class {@class.Name}");
+            sb.AppendLine($"{@class.AccessModifier.ToString().ToLower()} class {@class.Name}");
             sb.AppendLine("{");
 
             foreach (Method method in @class.Methods)
@@ -133,7 +133,7 @@ namespace Dogu.Frontend.Markdown
         {
             string parameters = $"({string.Join(", ", method.Parameters.Select(x => x.ToString()))})";
 
-            return $"{method.ReturnType} {method.Name}{parameters}";
+            return $"{method.AccessModifier.ToString().ToLower()} {method.ReturnType} {method.Name}{parameters}";
         }
     }
 }

@@ -45,31 +45,23 @@ namespace Dogu.Backend
             return codeMembers;
         }
 
-        private static Interface ParseInterface(Type type)
+        protected Interface ParseInterface(Type type)
         {
             Method[] methods = type
                 .GetMethods(BindingFlags.Instance
                             | BindingFlags.Public
                             | BindingFlags.DeclaredOnly)
-                .Select(x =>
-                {
-                    Parameter[] parameters = x
-                        .GetParameters()
-                        .Select(y => new Parameter(y.Name, y.ParameterType))
-                        .ToArray();
-
-                    var method = new Method(x.Name, x.ReturnType, parameters);
-
-                    return method;
-                })
+                .Select(ParseMethod)
                 .ToArray();
 
-            var @interface = new Interface(type.FullName, type.Name, methods);
+            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
+
+            var @interface = new Interface(type.FullName, type.Name, accessModifier, methods);
 
             return @interface;
         }
 
-        private static Enum ParseEnum(Type type)
+        protected Enum ParseEnum(Type type)
         {
             var enumNames = type.GetEnumNames();
             //TODO: support for enums other than int
@@ -80,12 +72,14 @@ namespace Dogu.Backend
             IDictionary<string, string> values = zipped
                 .ToDictionary<(string, string), string, string>(pair => pair.Item1, pair => pair.Item2);
 
-            var @enum = new Enum(type.FullName, type.Name, values);
+            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
+
+            var @enum = new Enum(type.FullName, type.Name, accessModifier, values);
 
             return @enum;
         }
 
-        private static Class ParseClass(Type type)
+        protected Class ParseClass(Type type)
         {
             Method[] methods = type
                 .GetMethods(BindingFlags.Instance
@@ -94,25 +88,30 @@ namespace Dogu.Backend
                             | BindingFlags.DeclaredOnly
                             | BindingFlags.NonPublic)
                 .Where(x => x.IsPublic || x.IsFamily)
-                .Select(x =>
-                {
-                    Parameter[] parameters = x
-                        .GetParameters()
-                        .Select(y => new Parameter(y.Name, y.ParameterType))
-                        .ToArray();
-
-                    var method = new Method(x.Name, x.ReturnType, parameters);
-
-                    return method;
-                })
+                .Select(ParseMethod)
                 .ToArray();
 
-            var @class = new Class(type.FullName, type.Name, methods);
+            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
+
+            var @class = new Class(type.FullName, type.Name, accessModifier, methods);
 
             return @class;
         }
 
-        public TopLevelTypeEnum MapTypeToCodeElement(Type type)
+        protected Method ParseMethod(MethodInfo x)
+        {
+            Parameter[] parameters = x
+                .GetParameters()
+                .Select(y => new Parameter(y.Name, y.ParameterType))
+                .ToArray();
+
+            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(x);
+
+            var method = new Method(x.Name, x.ReturnType, accessModifier, parameters);
+            return method;
+        }
+
+        protected TopLevelTypeEnum MapTypeToCodeElement(Type type)
         {
             return type switch
             {

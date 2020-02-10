@@ -8,7 +8,7 @@ namespace Dogu.Backend.Structures
     {
         public readonly Method[] Methods;
 
-        public Class(string fullName, string name, Method[] methods) : base(fullName, name)
+        public Class(string fullName, string name, AccessModifier accessModifier, Method[] methods) : base(fullName, name, accessModifier)
         {
             Methods = methods;
         }

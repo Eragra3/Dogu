@@ -10,17 +10,18 @@ namespace Dogu.Backend.Structures
         public readonly Parameter[] Parameters;
         public readonly Type ReturnTypeRaw;
         public readonly string ReturnType;
+        public readonly AccessModifier AccessModifier;
 
-        public Method(string name, Type returnTypeRaw, Parameter[] parameters)
+        public Method(string name, Type returnTypeRaw, AccessModifier accessModifier, Parameter[] parameters)
         {
             Name = name;
             Parameters = parameters;
+            AccessModifier = accessModifier;
             ReturnTypeRaw = returnTypeRaw;
             ReturnType = GenerateHumanReturnType(returnTypeRaw);
         }
 
         //TODO: nested generic types
-
         //TODO: extract to reuse it elsewhere
         private static string GenerateHumanReturnType(Type returnTypeRaw)
         {
