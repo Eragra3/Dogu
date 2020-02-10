@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using Dogu.Backend.Structures.Parameters;
 
 namespace Dogu.Backend.Structures
 {
     public class Enum : TopLevelType
     {
         //TODO: add type
-        public readonly IDictionary<string, string> Values;
+        public IDictionary<string, string> Values { get; }
 
-        public Enum(Type rawType, string fullName, string name, AccessModifier accessModifier,
-            IDictionary<string, string> values) : base(rawType, fullName, name, accessModifier)
+        public Enum(EnumParameters parameters) : base(parameters)
         {
-            Values = values;
+            Values = parameters.Values;
         }
     }
 }

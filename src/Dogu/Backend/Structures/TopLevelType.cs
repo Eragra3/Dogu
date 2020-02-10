@@ -2,35 +2,25 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using Dogu.Backend.Structures.Parameters;
 
 namespace Dogu.Backend.Structures
 {
     public abstract class TopLevelType
     {
-        public readonly Type RawType;
-        public readonly string FullName;
-        public readonly string Name;
-        public readonly AccessModifier AccessModifier;
+        public Type           RawType        { get; }
+        public string         FullName       { get; }
+        public string         Name           { get; }
+        public AccessModifier AccessModifier { get; }
 
-        protected TopLevelType(Type rawType, string fullName, string name, AccessModifier accessModifier)
+        protected TopLevelType(TopLevelTypeParameters parameters)
         {
-            RawType = rawType;
-            Name = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(rawType);
-            FullName = fullName;
-            AccessModifier = accessModifier;
+            RawType        = parameters.RawType;
+            Name           = parameters.Name;
+            FullName       = parameters.FullName;
+            AccessModifier = parameters.AccessModifier;
         }
 
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-
-            sb.AppendLine(GetType().FullName);
-            sb.AppendLine($"  {nameof(RawType)}={RawType}");
-            sb.AppendLine($"  {nameof(FullName)}={FullName}");
-            sb.AppendLine($"  {nameof(Name)}={Name}");
-            sb.Append($"  {nameof(AccessModifier)}={AccessModifier}");
-
-            return sb.ToString();
-        }
+        public override string ToString() => DebuggingUtility.Serialize(this);
     }
 }

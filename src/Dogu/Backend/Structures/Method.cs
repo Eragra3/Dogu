@@ -2,38 +2,27 @@
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Dogu.Backend.Structures.Parameters;
 
 namespace Dogu.Backend.Structures
 {
     public class Method
     {
-        public readonly string Name;
-        public readonly Type ReturnTypeRaw;
-        public readonly string ReturnType;
-        public readonly AccessModifier AccessModifier;
-        public readonly Parameter[] Parameters;
+        public string         Name           { get; }
+        public Type           RawReturnType  { get; }
+        public string         ReturnType     { get; }
+        public AccessModifier AccessModifier { get; }
+        public Parameter[]    Parameters     { get; }
 
-        public Method(MethodInfo methodInfo)
+        public Method(MethodParameters parameters)
         {
-            Name = methodInfo.Name;
-            ReturnTypeRaw = methodInfo.ReturnType;
-            ReturnType = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(methodInfo.ReturnType);
-            AccessModifier = ReflectionUtility.GetAccessModifier(methodInfo);
-
-            Parameter[] parameters = methodInfo
-                .GetParameters()
-                .Select(y => new Parameter(y.ParameterType, y))
-                .ToArray();
-            Parameters = parameters;
+            Name           = parameters.Name;
+            RawReturnType  = parameters.RawReturnType;
+            ReturnType     = parameters.ReturnType;
+            AccessModifier = parameters.AccessModifier;
+            Parameters     = parameters.Parameters;
         }
 
-        public override string ToString()
-        {
-            string parameters = string.Join(", ", Parameters.Select(x => x.ToString()));
-
-            string result = $"{Name}({parameters}) -> {ReturnType}";
-
-            return result;
-        }
+        public override string ToString() => DebuggingUtility.Serialize(this);
     }
 }

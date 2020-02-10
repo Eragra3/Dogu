@@ -1,11 +1,14 @@
 ﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Dogu.Backend;
 using Dogu.Backend.Structures;
+using Dogu.Frontend.Common;
 using Enum = Dogu.Backend.Structures.Enum;
+using static Dogu.Frontend.Common.CodePrinter;
 
 namespace Dogu.Frontend.Markdown
 {
@@ -26,11 +29,12 @@ namespace Dogu.Frontend.Markdown
             {
                 string section = type switch
                 {
-                    Class @class => DocumentClass(@class),
-                    Enum @enum => DocumentEnum(@enum),
+                    Class @class         => DocumentClass(@class),
+                    Enum @enum           => DocumentEnum(@enum),
                     Interface @interface => DocumentInterface(@interface),
-                    Structure structure => DocumentStructure(structure)
-                    // _ => throw new ArgumentOutOfRangeException(nameof(type))
+                    Structure structure  => DocumentStructure(structure),
+                    _ => throw new NotSupportedException(
+                        $"Type `{type.GetType().FullName}` is not supported with {nameof(MarkdownFrontend)}")
                 };
 
                 File.AppendAllText(filePath, section + Environment.NewLine);
@@ -46,7 +50,7 @@ namespace Dogu.Frontend.Markdown
             // Summary
             sb.AppendLine("Overview");
             sb.AppendLine("```csharp");
-            sb.AppendLine($"{structure.AccessModifier.ToString().ToLower()} struct {structure.Name}");
+            sb.AppendLine($"{PrintAccessModifier(structure.AccessModifier)} struct {structure.Name}");
             sb.AppendLine("{");
 
             foreach (Method method in structure.Methods)
@@ -74,7 +78,7 @@ namespace Dogu.Frontend.Markdown
             // Summary
             sb.AppendLine("Overview");
             sb.AppendLine("```csharp");
-            sb.AppendLine($"{@enum.AccessModifier.ToString().ToLower()} enum {@enum.Name}");
+            sb.AppendLine($"{PrintAccessModifier(@enum.AccessModifier)} enum {@enum.Name}");
             sb.AppendLine("{");
 
             foreach ((string name, string value) in @enum.Values)
@@ -98,7 +102,7 @@ namespace Dogu.Frontend.Markdown
             // Summary
             sb.AppendLine("Overview");
             sb.AppendLine("```csharp");
-            sb.AppendLine($"{@interface.AccessModifier.ToString().ToLower()} interface {@interface.Name}");
+            sb.AppendLine($"{PrintAccessModifier(@interface.AccessModifier)} interface {@interface.Name}");
             sb.AppendLine("{");
 
             sb.AppendLine("    // Indexers");
@@ -140,7 +144,7 @@ namespace Dogu.Frontend.Markdown
             // Summary
             sb.AppendLine("Overview");
             sb.AppendLine("```csharp");
-            sb.AppendLine($"{@class.AccessModifier.ToString().ToLower()} class {@class.Name}");
+            sb.AppendLine($"{PrintAccessModifier(@class.AccessModifier)} class {@class.Name}");
             sb.AppendLine("{");
 
             sb.AppendLine("    // Indexers");
@@ -206,56 +210,56 @@ namespace Dogu.Frontend.Markdown
         {
             string parameters = $"({string.Join(", ", method.Parameters.Select(x => GetParameterSignature(x)))})";
 
-            return $"{method.AccessModifier.ToString().ToLower()} {method.ReturnType} {method.Name}{parameters}";
+            return $"{PrintAccessModifier(method.AccessModifier)} {SimplifyLibraryTypes(method.ReturnType)} {method.Name}{parameters}";
         }
 
         private static string GetPropertySignature(Property property)
         {
             string getter = "";
-            if (property.HasGetter &&
-                (property.GetterAccessModifier == AccessModifier.Public
-                 || property.GetterAccessModifier == AccessModifier.Protected))
+            if (property.HasGetter)
             {
-                string accessorModifier = "";
-                if (property.PropertyAccessModifier != property.GetterAccessModifier
-                    && property.GetterAccessModifier == AccessModifier.Protected)
-                {
-                    accessorModifier = $"{AccessModifier.Protected.ToString().ToLower()} ";
-                }
-
-                getter = $"{accessorModifier}get; ";
+                getter = " get;";
             }
 
             string setter = "";
-            if (property.HasSetter &&
-                (property.SetterAccessModifier == AccessModifier.Public
-                 || property.SetterAccessModifier == AccessModifier.Protected))
+            if (property.HasSetter)
             {
-                string accessorModifier = "";
-                if (property.PropertyAccessModifier != property.SetterAccessModifier
-                    && property.SetterAccessModifier == AccessModifier.Protected)
-                {
-                    accessorModifier = $"{AccessModifier.Protected.ToString().ToLower()} ";
-                }
-
-                setter = $"{accessorModifier}set; ";
-            }
-
-            string accessors = "";
-            if (!string.IsNullOrEmpty(getter) || !string.IsNullOrEmpty(setter))
-            {
-                accessors = $" {{ {getter}{setter}}}";
+                setter = " set;";
             }
 
             string signature =
-                $"{property.PropertyAccessModifier.ToString().ToLower()} {property.Type} {property.Name}{accessors}";
+                $"{PrintAccessModifier(property.PropertyAccessModifier)} {SimplifyLibraryTypes(property.Type)} {property.Name} {{{getter}{setter} }}";
 
             return signature;
         }
 
-        private static string GetParameterSignature(Parameter x)
+        private static string GetParameterSignature(Parameter parameter)
         {
-            return x.ToString();
+            string modifiers = "";
+            if (parameter.IsIn)
+            {
+                modifiers += "in ";
+            }
+
+            if (parameter.IsOut)
+            {
+                modifiers += "out ";
+            }
+
+            if (parameter.IsRef)
+            {
+                modifiers += "ref ";
+            }
+
+            string defaultValue = "";
+            if (parameter.IsOptional)
+            {
+                defaultValue = $" = {parameter.DefaultValue}";
+            }
+
+            string signature = $"{modifiers}{SimplifyLibraryTypes(parameter.Type)} {parameter.Name}{defaultValue}";
+
+            return signature;
         }
     }
 }

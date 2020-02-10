@@ -1,74 +1,44 @@
 ﻿using System;
 using System.Reflection;
+using Dogu.Backend.Structures.Parameters;
 
 namespace Dogu.Backend.Structures
 {
     public class Property
     {
-        public readonly Type RawType;
-        public readonly PropertyInfo RawPropertyInfo;
-        public readonly string Name;
-        public readonly string Type;
-        public readonly AccessModifier? PropertyAccessModifier;
+        public Type           RawType                { get; set; }
+        public PropertyInfo   RawPropertyInfo        { get; set; }
+        public string         Name                   { get; set; }
+        public string         Type                   { get; set; }
+        public AccessModifier PropertyAccessModifier { get; set; }
 
-        public readonly bool HasSetter;
-        public readonly AccessModifier? SetterAccessModifier;
-        public readonly MethodInfo? RawSetMethod;
-        public readonly Method? SetMethod;
+        public bool            HasSetter            { get; set; }
+        public AccessModifier? SetterAccessModifier { get; set; }
+        public MethodInfo?     RawSetMethod         { get; set; }
+        public Method?         SetMethod            { get; set; }
 
-        public readonly bool HasGetter;
-        public readonly AccessModifier? GetterAccessModifier;
-        public readonly MethodInfo? RawGetMethod;
-        public readonly Method? GetMethod;
+        public bool            HasGetter            { get; set; }
+        public AccessModifier? GetterAccessModifier { get; set; }
+        public MethodInfo?     RawGetMethod         { get; set; }
+        public Method?         GetMethod            { get; set; }
 
-        public Property(PropertyInfo propertyInfo)
+        public Property(PropertyParameters parameters)
         {
-            RawType = propertyInfo.PropertyType;
-            RawPropertyInfo = propertyInfo;
-            Name = propertyInfo.Name;
-            Type = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(RawType);
-
-            HasSetter = propertyInfo.CanWrite;
-            RawSetMethod = propertyInfo.SetMethod;
-            if (HasSetter)
-            {
-                SetMethod = new Method(RawSetMethod);
-                SetterAccessModifier = ReflectionUtility.GetAccessModifier(RawSetMethod);
-            }
-
-            HasGetter = propertyInfo.CanRead;
-            RawGetMethod = propertyInfo.GetMethod;
-            if (HasGetter)
-            {
-                GetMethod = new Method(RawGetMethod);
-                GetterAccessModifier = ReflectionUtility.GetAccessModifier(RawGetMethod);
-            }
-
-            PropertyAccessModifier =
-                (GetterAccessModifier ?? 0) > (SetterAccessModifier ?? 0) ? GetterAccessModifier : SetterAccessModifier;
+            RawType                = parameters.RawType;
+            RawPropertyInfo        = parameters.RawPropertyInfo;
+            Name                   = parameters.Name;
+            Type                   = parameters.Type;
+            PropertyAccessModifier = parameters.PropertyAccessModifier;
+            HasSetter              = parameters.HasSetter;
+            SetterAccessModifier   = parameters.SetterAccessModifier;
+            RawSetMethod           = parameters.RawSetMethod;
+            SetMethod              = parameters.SetMethod;
+            HasGetter              = parameters.HasGetter;
+            GetterAccessModifier   = parameters.GetterAccessModifier;
+            RawGetMethod           = parameters.RawGetMethod;
+            GetMethod              = parameters.GetMethod;
         }
 
-        public override string ToString()
-        {
-            string getter = "";
-            if (HasGetter)
-            {
-                getter = $"{GetterAccessModifier.ToString().ToLower()} get; ";
-            }
-
-            string setter = "";
-            if (HasSetter)
-            {
-                setter = $"{SetterAccessModifier.ToString().ToLower()} set; ";
-            }
-
-            string accessors = "";
-            if (HasGetter || HasSetter)
-            {
-                accessors = $" {{ {getter}{setter}}}";
-            }
-
-            return $"{Type} {Name}{accessors}";
-        }
+        public override string ToString() => DebuggingUtility.Serialize(this);
     }
 }
