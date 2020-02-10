@@ -5,12 +5,12 @@ using System.Text;
 
 namespace Dogu.Backend.Structures
 {
-    public abstract class CodeElement
+    public abstract class TopLevelType
     {
         public string FullName;
         public string Name;
 
-        protected CodeElement(string fullName, string name)
+        protected TopLevelType(string fullName, string name)
         {
             Name = name;
             FullName = fullName;
@@ -18,14 +18,11 @@ namespace Dogu.Backend.Structures
 
         public override string ToString()
         {
-            Type thisType = GetType();
             var sb = new StringBuilder();
 
-            sb.AppendLine(thisType.Name);
-            foreach (var member in thisType.GetFields().Where(x => x.IsPublic))
-            {
-                sb.AppendLine($"  {member.Name}={member.GetValue(this)}");
-            }
+            sb.AppendLine(GetType().FullName);
+            sb.AppendLine($"  {nameof(FullName)}={FullName}");
+            sb.Append($"  {nameof(Name)}={Name}");
 
             return sb.ToString();
         }

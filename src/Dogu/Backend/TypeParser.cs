@@ -15,25 +15,25 @@ namespace Dogu.Backend
             _assemblyReader = assemblyReader;
         }
 
-        public IList<CodeElement> Parse()
+        public IList<TopLevelType> Parse()
         {
             var types = _assemblyReader.ExportedTypes.ToList();
 
             var codeMembers = types
-                .Select(x =>
+                .Select(type =>
                 {
-                    CodeElementType elementType = MapTypeToCodeElement(x);
+                    TopLevelTypeEnum elementTypeEnum = MapTypeToCodeElement(type);
 
-                    CodeElement element = elementType switch
+                    TopLevelType element = elementTypeEnum switch
                     {
-                        CodeElementType.Class => new Class(x.FullName, x.Name),
-                        CodeElementType.Interface => new Interface(x.FullName, x.Name),
-                        CodeElementType.Enum => new Enum(x.FullName, x.Name),
-                        CodeElementType.Structure => throw new NotImplementedException(),
-                        CodeElementType.Event => throw new NotImplementedException(),
-                        CodeElementType.Delegate => throw new NotImplementedException(),
+                        TopLevelTypeEnum.Class => ParseClass(type),
+                        TopLevelTypeEnum.Interface => new Interface(type.FullName, type.Name),
+                        TopLevelTypeEnum.Enum => new Enum(type.FullName, type.Name),
+                        TopLevelTypeEnum.Structure => throw new NotImplementedException(),
+                        TopLevelTypeEnum.Event => throw new NotImplementedException(),
+                        TopLevelTypeEnum.Delegate => throw new NotImplementedException(),
                         _ => throw new ArgumentOutOfRangeException(
-                            $"Got code type element that cannot be exported on assembly level, '{elementType}'")
+                            $"Got code type element that cannot be exported on assembly level, '{elementTypeEnum}'")
                     };
 
                     return element;
@@ -43,15 +43,41 @@ namespace Dogu.Backend
             return codeMembers;
         }
 
-        public CodeElementType MapTypeToCodeElement(Type type)
+        private static Class ParseClass(Type type)
+        {
+            Method[] methods = type
+                .GetMethods()
+                .Where(x => x.IsPublic || x.IsFamily)
+                .Select(x =>
+                {
+                    Parameter[] parameters = x
+                        .GetParameters()
+                        .Select(y => new Parameter(y.Name, y.ParameterType.FullName))
+                        .ToArray();
+
+                    var method = new Method(x.Name, x.ReturnType.FullName, parameters);
+
+                    return method;
+                })
+                .ToArray();
+
+            var @class = new Class(type.FullName, type.Name, methods);
+
+            return @class;
+        }
+
+        public TopLevelTypeEnum MapTypeToCodeElement(Type type)
         {
             return type switch
             {
-                var t when t.IsClass => CodeElementType.Class,
-                var t when t.IsInterface => CodeElementType.Interface,
-                var t when t.IsEnum => CodeElementType.Enum,
+                var t when t.IsClass => TopLevelTypeEnum.Class,
+                var t when t.IsInterface => TopLevelTypeEnum.Interface,
+                var t when t.IsEnum => TopLevelTypeEnum.Enum,
+                //TODO: var t when t.IsClass => TopLevelTypeEnum.Delegate,
+                //TODO: var t when t.IsClass => TopLevelTypeEnum.Event,
+                var t when t.IsValueType => TopLevelTypeEnum.Structure,
                 _ => throw new InvalidOperationException(
-                    $"Given type cannot be mapped to any {nameof(CodeElementType)}")
+                    $"Given type cannot be mapped to any {nameof(TopLevelTypeEnum)}")
             };
         }
     }

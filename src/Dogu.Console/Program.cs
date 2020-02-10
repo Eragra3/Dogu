@@ -28,7 +28,7 @@ namespace Dogu.Console
 
             var parser = new TypeParser(new AssemblyReader(assemblyPath));
 
-            foreach (CodeElement type in parser.Parse())
+            foreach (TopLevelType type in parser.Parse())
             {
                 System.Console.WriteLine(type);
             }

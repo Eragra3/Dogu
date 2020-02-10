@@ -1,6 +1,6 @@
 ﻿namespace Dogu.Backend.Structures
 {
-    public class Interface : CodeElement
+    public class Interface : TopLevelType
     {
         public Interface(string fullName, string name) : base(fullName, name)
         {

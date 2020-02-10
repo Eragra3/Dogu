@@ -10,6 +10,8 @@
         Delegate,
         Method,
         Field,
-        Property
+        Property,
+        Parameter,
+        Attribute
     }
 }
