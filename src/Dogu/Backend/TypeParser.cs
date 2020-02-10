@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Dogu.Backend.Structures;
 using Enum = Dogu.Backend.Structures.Enum;
 
@@ -17,7 +18,7 @@ namespace Dogu.Backend
 
         public IList<TopLevelType> Parse()
         {
-            var types = _assemblyReader.ExportedTypes.ToList();
+            var types = _assemblyReader.GetExportedTypes();
 
             var codeMembers = types
                 .Select(type =>
@@ -46,7 +47,11 @@ namespace Dogu.Backend
         private static Class ParseClass(Type type)
         {
             Method[] methods = type
-                .GetMethods()
+                .GetMethods(BindingFlags.Instance
+                            | BindingFlags.Static
+                            | BindingFlags.Public
+                            | BindingFlags.DeclaredOnly
+                            | BindingFlags.NonPublic)
                 .Where(x => x.IsPublic || x.IsFamily)
                 .Select(x =>
                 {

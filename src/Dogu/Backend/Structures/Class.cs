@@ -17,9 +17,18 @@ namespace Dogu.Backend.Structures
         {
             var sb = new StringBuilder();
 
+            string methodsString = string.Join($"{Environment.NewLine}    -", Methods.Select(x => x.ToString()));
+
             sb.AppendLine(base.ToString());
-            sb.AppendLine($"  {nameof(Methods)}");
-            sb.Append($"    -{string.Join($"{Environment.NewLine}    -", Methods.Select(x => x.ToString()))}");
+            sb.Append($"  {nameof(Methods)}");
+            if (string.IsNullOrEmpty(methodsString))
+            {
+                sb.Append($"=<NONE>");
+            }
+            else
+            {
+                sb.Append($"{Environment.NewLine}    -{methodsString}");
+            }
 
             return sb.ToString();
         }

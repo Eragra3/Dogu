@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Drawing;
 using Dogu.Backend;
 using Dogu.Backend.Structures;
+using Colorful;
 
 namespace Dogu.Console
 {
@@ -20,20 +22,19 @@ namespace Dogu.Console
 
             var reader = new AssemblyReader(assemblyPath);
 
-            foreach (var type in reader.ExportedTypes)
+            foreach (var type in reader.GetExportedTypes())
             {
                 // System.Console.WriteLine(type.FullName);
             }
-
 
             var parser = new TypeParser(new AssemblyReader(assemblyPath));
 
             foreach (TopLevelType type in parser.Parse())
             {
-                System.Console.WriteLine(type);
+                Colorful.Console.WriteLine(type, Color.Gray);
             }
 
-            System.Console.WriteLine("Finishing Dogu");
+            Colorful.Console.WriteLine("Finishing Dogu", Color.Green);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Dogu.Backend
             _assembly = _metadataLoadContext.LoadFromAssemblyName(assemblyName);
         }
 
-        public IEnumerable<Type> ExportedTypes => _assembly.ExportedTypes;
+        public IList<Type> GetExportedTypes() => _assembly.ExportedTypes.ToList();
 
         /// <inheritdoc cref="System.IDisposable.Dispose"/>
         protected virtual void Dispose(bool disposing)
@@ -39,6 +39,7 @@ namespace Dogu.Backend
             }
         }
 
+        /// <inheritdoc cref="System.IDisposable.Dispose"/>
         public void Dispose()
         {
             Dispose(true);

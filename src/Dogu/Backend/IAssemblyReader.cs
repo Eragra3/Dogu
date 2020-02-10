@@ -6,6 +6,6 @@ namespace Dogu.Backend
 {
     public interface IAssemblyReader
     {
-        IEnumerable<Type> ExportedTypes { get; }
+        IList<Type> GetExportedTypes();
     }
 }
