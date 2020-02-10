@@ -8,20 +8,40 @@ namespace Dogu.Backend.Structures
     {
         public readonly string Name;
         public readonly Parameter[] Parameters;
+        public readonly Type ReturnTypeRaw;
         public readonly string ReturnType;
 
-        public Method(string name, string returnType, Parameter[] parameters)
+        public Method(string name, Type returnTypeRaw, Parameter[] parameters)
         {
             Name = name;
             Parameters = parameters;
-            ReturnType = returnType;
+            ReturnTypeRaw = returnTypeRaw;
+            ReturnType = GenerateHumanReturnType(returnTypeRaw);
         }
 
-        public Method(string name, string returnType)
+        //TODO: nested generic types
+
+        //TODO: extract to reuse it elsewhere
+        private static string GenerateHumanReturnType(Type returnTypeRaw)
         {
-            Name = name;
-            ReturnType = returnType;
-            Parameters = Array.Empty<Parameter>();
+            if (returnTypeRaw.IsGenericType)
+            {
+                string baseType = GeneratedToGenericName(returnTypeRaw.Name);
+                string genericParameters =
+                    $"{string.Join(", ", returnTypeRaw.GetGenericArguments().Select(x => x.Name))}";
+
+                return $"{baseType}<{genericParameters}>";
+            }
+            else
+            {
+                return returnTypeRaw.Name;
+            }
+
+            string GeneratedToGenericName(string name)
+            {
+                int generatedPartIndex = name.IndexOf('`');
+                return name.Substring(0, generatedPartIndex);
+            }
         }
 
         public override string ToString()

@@ -3,6 +3,7 @@ using System.Drawing;
 using Dogu.Backend;
 using Dogu.Backend.Structures;
 using Colorful;
+using Dogu.Frontend.Markdown;
 
 namespace Dogu.Console
 {
@@ -11,21 +12,20 @@ namespace Dogu.Console
         public static void Main(string[] args)
         {
 #if DEBUG
-            args = new[] {@"Dogu.dll"};
+            args = new[] {@"Dogu.dll", "dogu.md"};
 #endif
             if (args.Length < 1)
             {
                 throw new Exception("You have to provide assembly path");
             }
 
-            string assemblyPath = args[0];
-
-            var reader = new AssemblyReader(assemblyPath);
-
-            foreach (var type in reader.GetExportedTypes())
+            if (args.Length < 2)
             {
-                // System.Console.WriteLine(type.FullName);
+                throw new Exception("You have to provide output path");
             }
+
+            string assemblyPath = args[0];
+            string outputPath = args[1];
 
             var parser = new TypeParser(new AssemblyReader(assemblyPath));
 
@@ -33,6 +33,10 @@ namespace Dogu.Console
             {
                 Colorful.Console.WriteLine(type, Color.Gray);
             }
+
+            var frontend = new MarkdownFrontend(parser.Parse());
+
+            frontend.WriteToFile(outputPath);
 
             Colorful.Console.WriteLine("Finishing Dogu", Color.Green);
         }

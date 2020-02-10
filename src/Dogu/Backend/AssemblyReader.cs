@@ -9,23 +9,11 @@ namespace Dogu.Backend
 {
     public class AssemblyReader : IAssemblyReader, IDisposable
     {
-        private readonly MetadataLoadContext _metadataLoadContext;
         private readonly Assembly _assembly;
-
-        private readonly string[] _coreAssemblies = new[] {"System.Runtime", "System.Private.CoreLib"};
 
         public AssemblyReader(string assemblyPath)
         {
-            string assemblyName = Path.GetFileNameWithoutExtension(assemblyPath);
-            string[] coreLibPaths = AppDomain.CurrentDomain
-                .GetAssemblies()
-                .Where(x => _coreAssemblies.Contains(x.GetName().Name))
-                .Select(x => x.Location)
-                .ToArray();
-
-            var resolver = new PathAssemblyResolver(new[] {assemblyPath}.Concat(coreLibPaths));
-            _metadataLoadContext = new MetadataLoadContext(resolver);
-            _assembly = _metadataLoadContext.LoadFromAssemblyName(assemblyName);
+            _assembly = Assembly.LoadFrom(assemblyPath);
         }
 
         public IList<Type> GetExportedTypes() => _assembly.ExportedTypes.ToList();
@@ -35,7 +23,6 @@ namespace Dogu.Backend
         {
             if (disposing)
             {
-                _metadataLoadContext.Dispose();
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using Dogu.Backend.Structures;
 using Enum = Dogu.Backend.Structures.Enum;
@@ -28,8 +29,8 @@ namespace Dogu.Backend
                     TopLevelType element = elementTypeEnum switch
                     {
                         TopLevelTypeEnum.Class => ParseClass(type),
-                        TopLevelTypeEnum.Interface => new Interface(type.FullName, type.Name),
-                        TopLevelTypeEnum.Enum => new Enum(type.FullName, type.Name),
+                        TopLevelTypeEnum.Interface => ParseInterface(type),
+                        TopLevelTypeEnum.Enum => ParseEnum(type),
                         TopLevelTypeEnum.Structure => throw new NotImplementedException(),
                         TopLevelTypeEnum.Event => throw new NotImplementedException(),
                         TopLevelTypeEnum.Delegate => throw new NotImplementedException(),
@@ -42,6 +43,46 @@ namespace Dogu.Backend
                 .ToList();
 
             return codeMembers;
+        }
+
+        private static Interface ParseInterface(Type type)
+        {
+            Method[] methods = type
+                .GetMethods(BindingFlags.Instance
+                            | BindingFlags.Public
+                            | BindingFlags.DeclaredOnly)
+                .Select(x =>
+                {
+                    Parameter[] parameters = x
+                        .GetParameters()
+                        .Select(y => new Parameter(y.Name, y.ParameterType))
+                        .ToArray();
+
+                    var method = new Method(x.Name, x.ReturnType, parameters);
+
+                    return method;
+                })
+                .ToArray();
+
+            var @interface = new Interface(type.FullName, type.Name, methods);
+
+            return @interface;
+        }
+
+        private static Enum ParseEnum(Type type)
+        {
+            var enumNames = type.GetEnumNames();
+            //TODO: support for enums other than int
+            var enumValues = type.GetEnumValues().Cast<int>().Select(x => x.ToString()).ToArray();
+
+            var zipped = enumNames.Zip(enumValues);
+
+            IDictionary<string, string> values = zipped
+                .ToDictionary<(string, string), string, string>(pair => pair.Item1, pair => pair.Item2);
+
+            var @enum = new Enum(type.FullName, type.Name, values);
+
+            return @enum;
         }
 
         private static Class ParseClass(Type type)
@@ -57,10 +98,10 @@ namespace Dogu.Backend
                 {
                     Parameter[] parameters = x
                         .GetParameters()
-                        .Select(y => new Parameter(y.Name, y.ParameterType.FullName))
+                        .Select(y => new Parameter(y.Name, y.ParameterType))
                         .ToArray();
 
-                    var method = new Method(x.Name, x.ReturnType.FullName, parameters);
+                    var method = new Method(x.Name, x.ReturnType, parameters);
 
                     return method;
                 })

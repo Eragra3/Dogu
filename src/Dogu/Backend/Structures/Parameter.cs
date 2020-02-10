@@ -7,9 +7,9 @@ namespace Dogu.Backend.Structures
     public class Parameter
     {
         public readonly string Name;
-        public readonly string Type;
+        public readonly Type Type;
 
-        public Parameter(string name, string type)
+        public Parameter(string name, Type type)
         {
             Name = name;
             Type = type;
