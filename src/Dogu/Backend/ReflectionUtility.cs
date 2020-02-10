@@ -33,7 +33,7 @@ namespace Dogu.Backend
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Code representation</returns>
-        public static string GeneratedTypeToCodeMarkup(Type type)
+        public static string GenerateCodeMarkupForGeneratedTypeName(Type type)
         {
             string typeName = GeneratedToGenericName(type.Name);
 
@@ -42,7 +42,7 @@ namespace Dogu.Backend
             if (genericArguments.Any())
             {
                 string genericParameters =
-                    $"{string.Join(", ", genericArguments.Select(GeneratedTypeToCodeMarkup))}";
+                    $"{string.Join(", ", genericArguments.Select(GenerateCodeMarkupForGeneratedTypeName))}";
 
                 return $"{typeName}<{genericParameters}>";
             }

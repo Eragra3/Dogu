@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Dogu.Backend;
 using Dogu.Backend.Structures;
 using Enum = Dogu.Backend.Structures.Enum;
 
@@ -129,6 +130,11 @@ namespace Dogu.Frontend.Markdown
             sb.AppendLine($"{@class.AccessModifier.ToString().ToLower()} class {@class.Name}");
             sb.AppendLine("{");
 
+            foreach (Property property in @class.Properties)
+            {
+                sb.AppendLine($"    {GetPropertySignature(property)};");
+            }
+
             foreach (Method method in @class.Methods)
             {
                 sb.AppendLine($"    {GetMethodSignature(method)};");
@@ -166,33 +172,53 @@ namespace Dogu.Frontend.Markdown
             return $"{method.AccessModifier.ToString().ToLower()} {method.ReturnType} {method.Name}{parameters}";
         }
 
-        private static string GetParameterSignature(Parameter x)
+        private static string GetPropertySignature(Property property)
         {
-            string modifiers = "";
-            if (x.IsIn)
+            string getter = "";
+            if (property.HasGetter &&
+                (property.GetterAccessModifier == AccessModifier.Public
+                 || property.GetterAccessModifier == AccessModifier.Protected))
             {
-                modifiers += "in ";
+                string accessorModifier = "";
+                if (property.PropertyAccessModifier != property.GetterAccessModifier
+                    && property.GetterAccessModifier == AccessModifier.Protected)
+                {
+                    accessorModifier = $"{AccessModifier.Protected.ToString().ToLower()} ";
+                }
+
+                getter = $"{accessorModifier}get; ";
             }
 
-            if (x.IsOut)
+            string setter = "";
+            if (property.HasSetter &&
+                (property.SetterAccessModifier == AccessModifier.Public
+                 || property.SetterAccessModifier == AccessModifier.Protected))
             {
-                modifiers += "out ";
+                string accessorModifier = "";
+                if (property.PropertyAccessModifier != property.SetterAccessModifier
+                    && property.SetterAccessModifier == AccessModifier.Protected)
+                {
+                    accessorModifier = $"{AccessModifier.Protected.ToString().ToLower()} ";
+                }
+
+                setter = $"{accessorModifier}set; ";
             }
 
-            if (x.IsRef)
+            string accessors = "";
+            if (!string.IsNullOrEmpty(getter) || !string.IsNullOrEmpty(setter))
             {
-                modifiers += "ref ";
+                accessors = $" {{ {getter}{setter}}}";
             }
 
-            string defaultValue = "";
-            if (x.IsOptional)
-            {
-                defaultValue = $" = {x.DefaultValue}";
-            }
-
-            string signature = $"{modifiers}{x.Type} {x.Name}{defaultValue}";
+            string signature =
+                $"{property.PropertyAccessModifier.ToString().ToLower()} {property.Type} {property.Name}{accessors}";
 
             return signature;
+        }
+
+        private static string GetParameterSignature(Parameter x)
+        {
+            return x.ToString();
         }
     }
 }

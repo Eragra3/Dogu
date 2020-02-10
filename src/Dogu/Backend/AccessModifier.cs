@@ -1,11 +1,13 @@
-﻿namespace Dogu.Backend
+﻿using System;
+
+namespace Dogu.Backend
 {
     public enum AccessModifier
     {
-        Public,
-        Protected,
         Private,
+        Protected,
         Internal,
+        Public,
         // TODO: add combo modifiers
     }
 }

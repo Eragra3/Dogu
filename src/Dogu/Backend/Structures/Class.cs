@@ -7,11 +7,13 @@ namespace Dogu.Backend.Structures
     public class Class : TopLevelType
     {
         public readonly Method[] Methods;
+        public readonly Property[] Properties;
 
-        public Class(Type rawType, string fullName, string name, AccessModifier accessModifier, Method[] methods) :
+        public Class(Type rawType, string fullName, string name, AccessModifier accessModifier, Method[] methods, Property[] properties) :
             base(rawType, fullName, name, accessModifier)
         {
             Methods = methods;
+            Properties = properties;
         }
 
         public override string ToString()

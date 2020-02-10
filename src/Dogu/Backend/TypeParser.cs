@@ -56,7 +56,7 @@ namespace Dogu.Backend
 
             AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
 
-            string name = ReflectionUtility.GeneratedTypeToCodeMarkup(type);
+            string name = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(type);
 
             var structure = new Structure(type, type.FullName, name, accessModifier, methods);
 
@@ -69,12 +69,14 @@ namespace Dogu.Backend
                 .GetMethods(BindingFlags.Instance
                             | BindingFlags.Public
                             | BindingFlags.DeclaredOnly)
+                // IsSpecialName excludes properties
+                .Where(x => !x.IsSpecialName)
                 .Select(ParseMethod)
                 .ToArray();
 
             AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
 
-            string name = ReflectionUtility.GeneratedTypeToCodeMarkup(type);
+            string name = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(type);
 
             var @interface = new Interface(type, type.FullName, name, accessModifier, methods);
 
@@ -107,33 +109,48 @@ namespace Dogu.Backend
                             | BindingFlags.Public
                             | BindingFlags.DeclaredOnly
                             | BindingFlags.NonPublic)
-                .Where(x => x.IsPublic || x.IsFamily)
+                // IsSpecialName excludes properties
+                .Where(x => (x.IsPublic || x.IsFamily) && !x.IsSpecialName)
                 .Select(ParseMethod)
+                .ToArray();
+
+            Property[] properties = type
+                .GetProperties(BindingFlags.Instance
+                               | BindingFlags.Static
+                               | BindingFlags.Public
+                               | BindingFlags.DeclaredOnly
+                               | BindingFlags.NonPublic)
+                .Where(x => new[] {x.GetMethod, x.SetMethod}.Any(x => x.IsPublic || x.IsFamily))
+                .Select(ParseProperty)
                 .ToArray();
 
             AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(type);
 
-            string name = ReflectionUtility.GeneratedTypeToCodeMarkup(type);
+            string name = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(type);
 
-            var @class = new Class(type, type.FullName, name, accessModifier, methods);
+            var @class = new Class(type, type.FullName, name, accessModifier, methods, properties);
 
             return @class;
         }
 
-        protected virtual Method ParseMethod(MethodInfo x)
+        protected virtual Property ParseProperty(PropertyInfo propertyInfo)
         {
-            if (x.Name == "BindToName")
-            {
-                Console.Write("");
-            }
-            Parameter[] parameters = x
+            var property = new Property(propertyInfo);
+
+            return property;
+        }
+
+        protected virtual Method ParseMethod(MethodInfo methodInfo)
+        {
+            Parameter[] parameters = methodInfo
                 .GetParameters()
-                .Select(y => new Parameter(y.Name, y.ParameterType, y))
+                .Select(y => new Parameter(y.ParameterType, y))
                 .ToArray();
 
-            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(x);
+            AccessModifier accessModifier = ReflectionUtility.GetAccessModifier(methodInfo);
 
-            var method = new Method(x.Name, x.ReturnType, ReflectionUtility.GeneratedTypeToCodeMarkup(x.ReturnType),
+            var method = new Method(methodInfo.Name, methodInfo.ReturnType,
+                ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(methodInfo.ReturnType),
                 accessModifier, parameters);
             return method;
         }

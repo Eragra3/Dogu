@@ -17,22 +17,46 @@ namespace Dogu.Backend.Structures
         public readonly bool IsRef;
         public readonly string? DefaultValue;
 
-        public Parameter(string name, Type type, ParameterInfo parameterInfo)
+        public Parameter(Type type, ParameterInfo parameterInfo)
         {
-            Name = name;
+            Name = parameterInfo.Name;
             RawType = type;
-            Type = ReflectionUtility.GeneratedTypeToCodeMarkup(type);
+            Type = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(type);
             RawParameterInfo = parameterInfo;
             IsOut = parameterInfo.IsOut;
             IsIn = parameterInfo.IsIn;
             IsOptional = parameterInfo.IsOptional;
             IsRef = !IsOut && type.IsByRef;
-            DefaultValue = parameterInfo.DefaultValue?.ToString() ?? null;
+            DefaultValue = parameterInfo.HasDefaultValue ? parameterInfo.DefaultValue?.ToString() ?? "null" : null;
         }
 
         public override string ToString()
         {
-            return $"{Type} {Name}";
+            string modifiers = "";
+            if (IsIn)
+            {
+                modifiers += "in ";
+            }
+
+            if (IsOut)
+            {
+                modifiers += "out ";
+            }
+
+            if (IsRef)
+            {
+                modifiers += "ref ";
+            }
+
+            string defaultValue = "";
+            if (IsOptional)
+            {
+                defaultValue = $" = {DefaultValue}";
+            }
+
+            string signature = $"{modifiers}{Type} {Name}{defaultValue}";
+
+            return signature;
         }
     }
 }

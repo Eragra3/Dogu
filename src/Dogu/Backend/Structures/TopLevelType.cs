@@ -15,7 +15,7 @@ namespace Dogu.Backend.Structures
         protected TopLevelType(Type rawType, string fullName, string name, AccessModifier accessModifier)
         {
             RawType = rawType;
-            Name = ReflectionUtility.GeneratedTypeToCodeMarkup(rawType);
+            Name = ReflectionUtility.GenerateCodeMarkupForGeneratedTypeName(rawType);
             FullName = fullName;
             AccessModifier = accessModifier;
         }
